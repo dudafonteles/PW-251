@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pagina</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <div id="teste1"></div>
+    <input type="button" onclick="location.href='adicionar.html'" value="Novo Veículo">
+    <div id="tabela_veiculos"></div>
+    <div id="paginacao" style="margin-top: 10px; text-align: center;"></div>
+
+    <div class="loader" id="loader" style="display: none;">
+        <h2>Carregando..</h2>
+        <img src="preload.gif" style="height:50px">
+        <p>Aguarde enquanto recebemos os dados de veículos...</p>
+    </div>
+
+    <script>
+        var lista = [];
+        var lista_pos = 0;
+        var itensPorPagina = 5;
+
+        async function pegaDados() {
+            const response = await fetch('https://mauricio.inf.br/p6/api/list/');
+            const names = await response.json();
+            lista = names.veiculos || [];
+        }
+
+        function gerarTabela() {
+            const inicio = lista_pos;
+            const fim = Math.min(lista_pos + itensPorPagina, lista.length);
+            let tabelaHTML = "<table style='width: 100%'>";
+            tabelaHTML += "<thead><tr><th style='text-align: center;'>Placas</th><th style='text-align: center;'>&nbsp;</th></tr></thead>";
+
+            for (let i = inicio; i < fim; i++) {
+                tabelaHTML += `<tr>
+                    <td style='border: 1px solid #ddd;'>${lista[i].placa}</td>
+                    <td style='border: 1px solid #ddd; text-align: center;'>
+                        <a href='#' onclick="apagar('${lista[i].placa}')">x</a>
+                    </td>
+                </tr>`;
+            }
+
+            tabelaHTML += "</table>";
+            document.getElementById('tabela_veiculos').innerHTML = tabelaHTML;
+
+            // Botões de navegação
+            let paginacao = "";
+            if (lista_pos > 0) {
+                paginacao += "<button onclick='anterior()'>Anterior</button> ";
+            }
+            if (fim < lista.length) {
+                paginacao += "<button onclick='proximo()'>Próximo</button>";
+            }
+            document.getElementById('paginacao').innerHTML = paginacao;
+        }
+
+        function proximo() {
+            if (lista_pos + itensPorPagina < lista.length) {
+                lista_pos += itensPorPagina;
+                gerarTabela();
+            }
+        }
+
+        function anterior() {
+            if (lista_pos - itensPorPagina >= 0) {
+                lista_pos -= itensPorPagina;
+                gerarTabela();
+            }
+        }
+
+        function exclui(placa) {
+            var ajax = new XMLHttpRequest();
+            var form_data = new FormData();
+            form_data.append("placa", placa);
+            ajax.open("POST", "https://mauricio.inf.br/p6/api/remove/", true);
+            ajax.send(form_data);
+            ajax.onreadystatechange = function () {
+                if (ajax.readyState == 4 && ajax.status == 200) {
+                    carregaInformacao();
+                }
+            }
+        }
+
+        function apagar(placa) {
+            if (confirm("Deseja apagar o veículo de placa " + placa)) {
+                exclui(placa);
+                document.getElementById('tabela_veiculos').innerHTML = '';
+                showDialog();
+            }
+        }
+
+        function carregaInformacao() {
+            showDialog();
+            pegaDados().then(() => {
+                lista_pos = 0;
+                gerarTabela();
+                hideDialog();
+            });
+        }
+
+        function showDialog() {
+            document.getElementById('loader').style.display = 'block';
+        }
+
+        function hideDialog() {
+            document.getElementById('loader').style.display = 'none';
+        }
+
+        // Carrega dados ao iniciar
+        carregaInformacao();
+    </script>
+</body>
+</html>

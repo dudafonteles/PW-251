@@ -1,0 +1,42 @@
+<html>
+    <body>
+        <div id="teste1"></div>
+        <form id="form1">
+            Placa: <input type="text" id="placa" name="placa"><br>
+            Marca: <input type="text" id="marca" name="marca"><br>
+            Modelo: <input type="text" id="modelo" name="modelo"><br>
+            Ano Fabric: <input type="text" id="ano_fabric" name="ano_fabric"><br>
+            Cor: <input type="text" id="cor" name="cor"><br>
+            <input type="button" value="Salvar" onclick="enviar()"> <input type="button" onclick="location.href='listar.html'" value="Voltar">
+        </form>
+    </body>
+    <script>
+        
+        function enviar() {
+            var ajax = new XMLHttpRequest();
+            var form = document.getElementById('form1');
+            var formData = new FormData(form);
+
+            // Seta tipo de requisição: Post e a URL da API
+            ajax.open("POST", "https://mauricio.inf.br/p6/api/add/", true);
+            ajax.send(formData);
+
+            // Cria um evento para receber o retorno.
+            ajax.onreadystatechange = function() {
+
+                // Caso o state seja 4 e o http.status for 200, é porque a requisiçõe deu certo.
+                if (ajax.readyState == 4 && ajax.status == 200) {
+
+                    var data = ajax.responseText;
+
+                    // Retorno do Ajax
+                    document.getElementById('teste1').innerHTML = data
+                    location.href = 'listar.html';
+                    //console.log(data);
+                }
+            }
+        }
+
+
+    </script>
+</html>
